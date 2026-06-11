@@ -1156,6 +1156,34 @@ main > section {
   border-radius: var(--radius-pill);
   background: var(--accent);
 }
+/* Egress range: pale red within free zone, full red only after 3x threshold */
+.range-input.egress-range::-webkit-slider-runnable-track {
+  background:
+    linear-gradient(
+      to right,
+      rgba(226, 6, 38, 0.32) 0%,
+      rgba(226, 6, 38, 0.32) var(--egress-paid-start, 0%),
+      var(--accent) var(--egress-paid-start, 0%),
+      var(--accent) var(--range-progress, 0%),
+      transparent var(--range-progress, 0%)
+    ),
+    var(--track);
+}
+.range-input.egress-range::-moz-range-track {
+  background:
+    linear-gradient(
+      to right,
+      rgba(226, 6, 38, 0.32) 0%,
+      rgba(226, 6, 38, 0.32) var(--egress-paid-start, 0%),
+      var(--accent) var(--egress-paid-start, 0%),
+      var(--accent) var(--range-progress, 0%),
+      transparent var(--range-progress, 0%)
+    ),
+    var(--track);
+}
+.range-input.egress-range::-moz-range-progress {
+  background: transparent;
+}
 .range-input::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -1202,11 +1230,16 @@ main > section {
 }
 .egress-progress {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--egress-progress, 0%);
-  max-width: 100%;
-  background: var(--accent);
-  transition: width 250ms var(--ease);
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(226, 6, 38, 0.32) 0%,
+    rgba(226, 6, 38, 0.32) var(--egress-paid-start, 0%),
+    var(--accent) var(--egress-paid-start, 0%),
+    var(--accent) var(--egress-progress, 0%),
+    transparent var(--egress-progress, 0%)
+  );
+  transition: background 250ms var(--ease);
 }
 .egress-marker {
   position: absolute;
@@ -1249,6 +1282,7 @@ main > section {
   backdrop-filter: var(--surface-blur);
   -webkit-backdrop-filter: var(--surface-blur);
   box-shadow: var(--shadow-pop);
+  container-type: inline-size;
 }
 /* Dark scrim over the gradient answer cards so light text clears AA over the
    bright red/purple lobes; the gradient still reads through. Not on Bright
@@ -1311,7 +1345,7 @@ main > section {
 .answer-total {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: clamp(3rem, 7vw, 4.6rem);
+  font-size: clamp(1.75rem, 13cqw, 4.6rem);
   line-height: 0.95;
   letter-spacing: -0.03em;
   margin-top: 1.1rem;
@@ -1320,9 +1354,11 @@ main > section {
 }
 .answer-period {
   margin-top: 0.55rem;
+  min-height: calc(2 * 1.5 * 0.92rem);
   color: var(--answer-muted);
   font-size: 0.92rem;
   font-weight: 500;
+  line-height: 1.5;
 }
 .answer-divider {
   height: 1px;
@@ -1339,6 +1375,15 @@ main > section {
   display: flex;
   align-items: baseline;
   gap: 0.55rem;
+}
+.answer-savings-figure .answer-save-label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #e20626;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 .answer-savings-figure strong {
   font-family: var(--font-display);
@@ -1379,8 +1424,7 @@ main > section {
   color: var(--bb-navy-50);
 }
 .answer-copy {
-  margin-top: 1rem;
-  margin-bottom: 1.25rem;
+  margin: 0;
   color: var(--answer-muted);
   font-size: 0.94rem;
   line-height: 1.5;
@@ -1635,7 +1679,7 @@ main > section {
   background: var(--accent);
 }
 .provider-card.is-selected {
-  box-shadow: 0 0 0 2px var(--provider-accent), var(--shadow-card);
+  box-shadow: inset 0 0 0 2px var(--provider-accent), var(--shadow-card);
 }
 .pc-head {
   display: flex;

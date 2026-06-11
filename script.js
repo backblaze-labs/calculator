@@ -144,29 +144,8 @@
       },
     },
     {
-      id: "gcs",
-      name: "Google Cloud Storage",
-      vendor: "Google Cloud",
-      suffix: "",
-      logo: "assets/logos/google-cloud.svg",
-      accent: "#34a853",
-      accentStrong: "#4285f4",
-      accentRgb: "52, 168, 83",
-      egressRate: 0.12,
-      egressLabel: "First 100 GB free, then modeled at $0.12 / GB",
-      freeEgress: () => 100,
-      regionAware: true,
-      operationsLabel: "Class A and B request pricing",
-      opRates: { classA1000: 0.005, classB1000: 0.0004, classC1000: 0 },
-      tiers: {
-        standard: { label: "Standard", rate: 0.02, minDays: 0 },
-        nearline: { label: "Nearline", rate: 0.01, minDays: 30 },
-        coldline: { label: "Coldline", rate: 0.004, minDays: 90 },
-      },
-    },
-    {
       id: "azure",
-      name: "Azure Blob",
+      name: "Azure Blob Storage",
       vendor: "Microsoft Azure",
       suffix: "Blob",
       logo: "assets/logos/microsoft-azure.webp",
@@ -203,6 +182,27 @@
       operationsLabel: "Class A/B operations with free tiers",
       r2Ops: true,
       minDays: 0,
+    },
+    {
+      id: "gcs",
+      name: "Google Cloud Storage",
+      vendor: "Google Cloud",
+      suffix: "",
+      logo: "assets/logos/google-cloud.svg",
+      accent: "#34a853",
+      accentStrong: "#4285f4",
+      accentRgb: "52, 168, 83",
+      egressRate: 0.12,
+      egressLabel: "First 100 GB free, then modeled at $0.12 / GB",
+      freeEgress: () => 100,
+      regionAware: true,
+      operationsLabel: "Class A and B request pricing",
+      opRates: { classA1000: 0.005, classB1000: 0.0004, classC1000: 0 },
+      tiers: {
+        standard: { label: "Standard", rate: 0.02, minDays: 0 },
+        nearline: { label: "Nearline", rate: 0.01, minDays: 30 },
+        coldline: { label: "Coldline", rate: 0.004, minDays: 90 },
+      },
     },
   ];
 
@@ -390,13 +390,14 @@
   function effectiveInputs() {
     const defaults = WORKLOADS[state.workload];
     const advanced = state.advancedUnlocked ? state.advancedDraft : defaults;
-    const storageGB = state.storageTB * GB_PER_TB;
+    const actualTB = state.storageUnit === "PB" ? state.storageTB * TB_PER_PB : state.storageTB;
+    const storageGB = actualTB * GB_PER_TB;
     const egressGB = storageGB * (state.egressPct / 100);
 
     return {
       workload: state.workload,
       workloadLabel: defaults.label,
-      storageTB: state.storageTB,
+      storageTB: actualTB,
       storageGB,
       egressPct: state.egressPct,
       egressGB,
@@ -586,10 +587,8 @@
       button.setAttribute("aria-pressed", active ? "true" : "false");
     });
 
-    const storageDisplay =
-      state.storageUnit === "PB" ? state.storageTB / TB_PER_PB : state.storageTB;
     els.storageUnit.value = state.storageUnit;
-    setInputValue(els.storageValue, trimInput(storageDisplay));
+    setInputValue(els.storageValue, trimInput(state.storageTB));
     els.storageRange.value = Math.min(Number(els.storageRange.max), Math.max(1, state.storageTB));
     setRangeProgress(els.storageRange);
 
@@ -597,7 +596,10 @@
     els.egressRange.value = Math.min(Number(els.egressRange.max), Math.max(0, state.egressPct));
     setRangeProgress(els.egressRange);
     const egressProgress = Math.min(100, (state.egressPct / 500) * 100);
+    const egressPaidStart = Math.min(egressProgress, 60);
+    els.egressRange.style.setProperty("--egress-paid-start", `${egressPaidStart}%`);
     els.egressProgress.style.setProperty("--egress-progress", `${egressProgress}%`);
+    els.egressProgress.style.setProperty("--egress-paid-start", `${egressPaidStart}%`);
 
     els.egressNote.textContent =
       state.egressPct <= 300
@@ -702,9 +704,8 @@
 
   function renderCompareChart(costs) {
     const maxTotal = Math.max(...costs.map((cost) => cost.total), 1);
-    const sorted = [...costs].sort((a, b) => a.total - b.total);
 
-    els.compareChart.innerHTML = sorted
+    els.compareChart.innerHTML = costs
       .map((cost) => {
         const provider = cost.provider;
         const width = Math.max(3, (cost.total / maxTotal) * 100);
@@ -911,7 +912,7 @@
   function updateStorageFromDisplay() {
     const raw = Math.max(0, Number(els.storageValue.value) || 0);
     state.storageUnit = els.storageUnit.value;
-    state.storageTB = state.storageUnit === "PB" ? raw * TB_PER_PB : raw;
+    state.storageTB = raw;
     render();
   }
 
@@ -1242,8 +1243,8 @@
     els.storageValue.addEventListener("input", updateStorageFromDisplay);
     els.storageUnit.addEventListener("change", updateStorageFromDisplay);
     els.storageRange.addEventListener("input", () => {
-      state.storageUnit = "TB";
-      state.storageTB = Number(els.storageRange.value);
+      const sliderTB = Number(els.storageRange.value);
+      state.storageTB = sliderTB;
       render();
     });
 

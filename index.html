@@ -251,10 +251,6 @@
               <div class="answer-divider" role="presentation"></div>
 
               <div class="answer-savings">
-                <div class="answer-savings-figure">
-                  <strong data-savings>$0</strong>
-                  <span><span data-savings-percent>0%</span> lower</span>
-                </div>
                 <label class="compare-inline" for="compare-provider">
                   <span>vs.</span>
                   <select id="compare-provider">
@@ -264,9 +260,13 @@
                     <option value="r2">Cloudflare R2</option>
                   </select>
                 </label>
+                <p class="answer-copy" data-savings-copy>Adjust the workload to compare modeled costs.</p>
+                <div class="answer-savings-figure">
+                  <span class="answer-save-label">You save</span>
+                  <strong data-savings>$0</strong>
+                  <span class="visually-hidden"><span data-savings-percent>0%</span> lower</span>
+                </div>
               </div>
-
-              <p class="answer-copy" data-savings-copy>Adjust the workload to compare modeled costs.</p>
 
               <div class="answer-stat">
                 <span class="answer-stat-icon" aria-hidden="true">
